@@ -1,6 +1,6 @@
 const $ = id => document.getElementById(id)
 const form = document.querySelector('form'), tg = window.Telegram?.WebApp
-let state, sent = false
+let state, sent = false, emote = ''
 try {
   state = JSON.parse(new URLSearchParams(location.hash.slice(1)).get('launch'))
   if (state?.v !== 1 || !Array.isArray(state.ammo) || state.ammo.length !== 10 || !state.choice ||
@@ -10,6 +10,13 @@ try {
       !state.ammo.every(a => typeof a.key === 'string' && typeof a.name === 'string' && typeof a.description === 'string' && (a.left === null || Number.isInteger(a.left)))) throw Error()
   if (!tg || !tg.initData && !tg.platform || tg.platform === 'unknown') throw Error()
   tg.ready(); tg.expand()
+  for (const emoji of ['', '😎', '🖕', '💀', '💩', '⚡', '😭', '😂']) {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = emoji || '∅'
+    b.setAttribute('aria-label', emoji || 'Ei emotea'); b.setAttribute('aria-pressed', String(!emoji))
+    b.onclick = () => { emote = emoji; $('emotes').querySelectorAll('button').forEach(item => item.setAttribute('aria-pressed', String(item === b))) }
+    $('emotes').append(b)
+  }
+  if (!state.ammo.some(a => a.key === state.choice.ammo && a.left !== 0)) state.choice.ammo = 'kuula'
   $('angle').value = state.choice.angle; $('power').value = state.choice.power
   $('direction').value = state.choice.angle < 90 ? '0' : '180'
   for (const ammo of state.ammo) {
@@ -48,7 +55,7 @@ try {
     e.preventDefault(); if (sent || Date.now() >= state.deadline) return
     const roller = state.choice.ammo === 'pyorija'
     const payload = { v: 1, type: 'cannon.shot', gameId: state.gameId, round: state.round, sessionId: state.sessionId,
-      ammo: state.choice.ammo, angle: Number($(roller ? 'direction' : 'angle').value), power: roller ? 70 : Number($('power').value) }
+      ammo: state.choice.ammo, angle: Number($(roller ? 'direction' : 'angle').value), power: roller ? 70 : Number($('power').value), ...(emote ? { emote } : {}) }
     sent = true; $('send').disabled = true
     try { tg.sendData(JSON.stringify(payload)); $('status').textContent = 'Lähetetty. Tarkista hostin kuittaus Telegramista.' }
     catch { sent = false; $('send').disabled = false; $('status').textContent = 'Lähetys epäonnistui. Yritä uudelleen.' }
