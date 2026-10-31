@@ -16,8 +16,11 @@ try {
     const b = document.createElement('button'); b.type = 'button'; b.disabled = ammo.left === 0
     b.textContent = `${ammo.name} · ${ammo.left ?? '∞'}`
     const description = document.createElement('small'); description.textContent = ammo.description; b.append(description)
-    b.dataset.ammo = ammo.key; b.onclick = () => { state.choice.ammo = ammo.key; render() }; $('ammo').append(b)
+    b.dataset.ammo = ammo.key; b.onclick = () => { state.choice.ammo = ammo.key; render(); $('ammoDialog').close() }; $('ammo').append(b)
   }
+  $('openAmmo').onclick = () => $('ammoDialog').showModal()
+  $('closeAmmo').onclick = () => $('ammoDialog').close()
+  $('ammoDialog').addEventListener('click', e => { if (e.target === $('ammoDialog')) { const r = e.target.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) e.target.close() } })
   $('warning').textContent = state.buried ? 'Tankkisi on maan sisällä. Kaivurilla voit avata tilaa.' : ''
   const remaining = state.deadline - Date.now()
   const updateTime = () => {
@@ -29,11 +32,14 @@ try {
   form.hidden = false; updateTime(); setInterval(updateTime, 500)
   function render() {
     const roller = state.choice.ammo === 'pyorija'
-    $('aim').hidden = roller; $('roller').hidden = !roller
+    $('aim').hidden = roller; $('roller').hidden = !roller; $('powerPanel').hidden = roller
     $('angleValue').textContent = `${$('angle').value}°`; $('powerValue').textContent = $('power').value
-    $('arrow').style.transform = `rotate(${90 - Number($('angle').value)}deg)`
+    const angle = Number($(roller ? 'direction' : 'angle').value)
+    $('barrel').setAttribute('transform', `rotate(${-angle} 150 152)`)
+    $('cannon').setAttribute('aria-label', `Tykin tähtäyssuunta ${angle} astetta`)
     document.querySelectorAll('[data-ammo]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.ammo === state.choice.ammo)))
     const ammo = state.ammo.find(a => a.key === state.choice.ammo)
+    $('openAmmo').textContent = `${ammo?.name ?? 'Valitse ammus'} · ${ammo?.left ?? '∞'} ▾`
     $('review').textContent = `${ammo?.name ?? 'Valitse ammus'} · ${roller ? $('direction').selectedOptions[0].text : `${$('angle').value}° · voima ${$('power').value}`}`
   }
   form.oninput = render
