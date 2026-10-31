@@ -3,7 +3,7 @@ const form = document.querySelector('form'), tg = window.Telegram?.WebApp
 let state, sent = false, emote = ''
 try {
   state = JSON.parse(new URLSearchParams(location.hash.slice(1)).get('launch'))
-  if (state?.v !== 1 || !Array.isArray(state.ammo) || state.ammo.length !== 10 || !state.choice ||
+  if (state?.v !== 1 || !Array.isArray(state.ammo) || (state.ammo.length < 1 || state.ammo.length > 32) || !state.choice ||
       !Number.isFinite(state.deadline) || !Number.isFinite(state.issuedAt) || state.deadline <= state.issuedAt ||
       state.deadline - state.issuedAt > 90000 || !Number.isInteger(state.round) ||
       ![state.gameId, state.sessionId].every(v => typeof v === 'string' && /^[0-9a-f-]{36}$/.test(v)) ||
